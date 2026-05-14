@@ -42,18 +42,20 @@ def localize_bridgerpay_timestamps(df):
     
     return df
 
-# Reconciliation Logic
+# Reconciliation Logic - Match on 'merchantOrderId' (BridgerPay) and 'BP ID' (Backend API)
 def reconcile(bridgerpay_df, backend_df):
     # Localize timestamps to GMT+6
     backend_df = localize_backend_timestamps(backend_df)
     bridgerpay_df = localize_bridgerpay_timestamps(bridgerpay_df)
 
-    # Merge the data on transactionId and amount
-    reconciled_df = pd.merge(bridgerpay_df[['transactionId', 'amount', 'pspName', 'completionDate']],
-                             backend_df[['Transaction ID', 'Total', 'Status', 'Created At']], 
-                             left_on='transactionId', right_on='Transaction ID', how='outer', suffixes=('_bridgerpay', '_backend'))
+    # Merge the data on merchantOrderId (BP ID) and amount
+    reconciled_df = pd.merge(
+        bridgerpay_df[['merchantOrderId', 'amount', 'pspName', 'completionDate']],  # BridgerPay columns
+        backend_df[['BP ID', 'Total', 'Status', 'Created At']],  # Backend API columns
+        left_on='merchantOrderId', right_on='BP ID', how='outer', suffixes=('_bridgerpay', '_backend')
+    )
 
-    # Find discrepancies
+    # Find discrepancies in amount
     discrepancies = reconciled_df[reconciled_df['amount'] != reconciled_df['Total']]
     return reconciled_df, discrepancies
 
