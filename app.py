@@ -42,8 +42,20 @@ def localize_bridgerpay_timestamps(df):
     
     return df
 
-# Reconciliation Logic - Match on 'merchantOrderId' (BridgerPay) and 'BP ID' (Backend API)
+# Reconciliation Logic - Check for column names and clean them
 def reconcile(bridgerpay_df, backend_df):
+    # Clean column names (remove leading/trailing spaces)
+    bridgerpay_df.columns = bridgerpay_df.columns.str.strip()
+    backend_df.columns = backend_df.columns.str.strip()
+
+    # Verify that required columns are in the backend API file
+    required_columns_backend = ['BP ID', 'Total', 'Status', 'Created At']
+    missing_columns = [col for col in required_columns_backend if col not in backend_df.columns]
+
+    if missing_columns:
+        st.error(f"Missing columns in Backend API data: {', '.join(missing_columns)}")
+        return None, None
+
     # Localize timestamps to GMT+6
     backend_df = localize_backend_timestamps(backend_df)
     bridgerpay_df = localize_bridgerpay_timestamps(bridgerpay_df)
