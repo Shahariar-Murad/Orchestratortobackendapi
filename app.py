@@ -42,14 +42,14 @@ def localize_bridgerpay_timestamps(df):
     
     return df
 
-# Reconciliation Logic - Check for column names and clean them
+# Reconciliation Logic - Match on 'Transaction ID' from BridgerPay and Backend API
 def reconcile(bridgerpay_df, backend_df):
     # Clean column names (remove leading/trailing spaces)
     bridgerpay_df.columns = bridgerpay_df.columns.str.strip()
     backend_df.columns = backend_df.columns.str.strip()
 
     # Verify that required columns are in the backend API file
-    required_columns_backend = ['BP ID', 'Total', 'Status', 'Created At']
+    required_columns_backend = ['Transaction ID', 'Total', 'Status', 'Created At']
     missing_columns = [col for col in required_columns_backend if col not in backend_df.columns]
 
     if missing_columns:
@@ -60,11 +60,11 @@ def reconcile(bridgerpay_df, backend_df):
     backend_df = localize_backend_timestamps(backend_df)
     bridgerpay_df = localize_bridgerpay_timestamps(bridgerpay_df)
 
-    # Merge the data on merchantOrderId (BP ID) and amount
+    # Merge the data on 'Transaction ID' and amount
     reconciled_df = pd.merge(
-        bridgerpay_df[['merchantOrderId', 'amount', 'pspName', 'completionDate']],  # BridgerPay columns
-        backend_df[['BP ID', 'Total', 'Status', 'Created At']],  # Backend API columns
-        left_on='merchantOrderId', right_on='BP ID', how='outer', suffixes=('_bridgerpay', '_backend')
+        bridgerpay_df[['transactionId', 'amount', 'pspName', 'completionDate']],  # BridgerPay columns
+        backend_df[['Transaction ID', 'Total', 'Status', 'Created At']],  # Backend API columns
+        left_on='transactionId', right_on='Transaction ID', how='outer', suffixes=('_bridgerpay', '_backend')
     )
 
     # Find discrepancies in amount
