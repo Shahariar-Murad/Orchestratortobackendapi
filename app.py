@@ -14,23 +14,31 @@ def load_data():
         return bridgerpay_df, backend_df
     return None, None
 
-# Convert Backend API timestamps from GMT+3 to GMT+6, if they are naive
+# Convert Backend API timestamps to GMT+6, ensuring they are in datetime format
 def localize_backend_timestamps(df):
-    # Check if the 'Created At' and 'Updated At' columns are naive
+    # Ensure 'Created At' and 'Updated At' columns are in datetime format
+    df['Created At'] = pd.to_datetime(df['Created At'], errors='coerce')  # Ensure it's in datetime
+    df['Updated At'] = pd.to_datetime(df['Updated At'], errors='coerce')  # Ensure it's in datetime
+
+    # Now check if the datetime objects are naive and localize to Asia/Dhaka (GMT+6)
     if df['Created At'].dt.tz is None:
-        df['Created At'] = pd.to_datetime(df['Created At']).dt.tz_localize('Asia/Dhaka')
+        df['Created At'] = df['Created At'].dt.tz_localize('Asia/Dhaka')
     if df['Updated At'].dt.tz is None:
-        df['Updated At'] = pd.to_datetime(df['Updated At']).dt.tz_localize('Asia/Dhaka')
+        df['Updated At'] = df['Updated At'].dt.tz_localize('Asia/Dhaka')
     
     return df
 
 # Convert BridgerPay timestamps
 def localize_bridgerpay_timestamps(df):
-    # Check if the 'processing_date' and 'completionDate' are naive
+    # Ensure 'processing_date' and 'completionDate' are in datetime format
+    df['processing_date'] = pd.to_datetime(df['processing_date'], errors='coerce')
+    df['completionDate'] = pd.to_datetime(df['completionDate'], errors='coerce')
+    
+    # Now check if the datetime objects are naive and localize to Asia/Dhaka (GMT+6)
     if df['processing_date'].dt.tz is None:
-        df['processing_date'] = pd.to_datetime(df['processing_date']).dt.tz_localize('Asia/Dhaka')
+        df['processing_date'] = df['processing_date'].dt.tz_localize('Asia/Dhaka')
     if df['completionDate'].dt.tz is None:
-        df['completionDate'] = pd.to_datetime(df['completionDate']).dt.tz_localize('Asia/Dhaka')
+        df['completionDate'] = df['completionDate'].dt.tz_localize('Asia/Dhaka')
     
     return df
 
